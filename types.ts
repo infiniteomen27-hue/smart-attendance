@@ -1,5 +1,6 @@
 
 export interface AttendanceSession {
+  id: string;
   year: string;
   lecture: string;
   facultyName: string;
