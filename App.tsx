@@ -57,7 +57,9 @@ const App: React.FC = () => {
           ...parsed,
           presentRolls: new Set(parsed.presentRolls)
         });
-        setCurrentView('grid'); // Default to grid if a session exists
+        // We stay on setup by default unless they click resume, but let's 
+        // go to grid if there's a fresh session being worked on.
+        setCurrentView('grid'); 
       } catch (e) {
         console.error("Failed to load saved session", e);
       }
@@ -133,7 +135,7 @@ const App: React.FC = () => {
   };
 
   const discardSession = () => {
-    if (confirm('Discard session? Changes will not be saved.')) {
+    if (confirm('Discard current session? All unsaved data will be lost.')) {
       setSession(null);
       setCurrentView('setup');
     }
@@ -141,9 +143,10 @@ const App: React.FC = () => {
 
   const handleBack = () => {
     if (currentView === 'history') {
+      // If we have an active session, go back to grid, otherwise setup
       setCurrentView(session ? 'grid' : 'setup');
     } else if (currentView === 'grid') {
-      // In grid view, "Back" just hides the grid but doesn't delete session data
+      // Just return to setup, keeping session active (Resume button will show)
       setCurrentView('setup');
     }
   };
@@ -168,10 +171,10 @@ const App: React.FC = () => {
           {currentView !== 'setup' ? (
              <button 
                 onClick={handleBack}
-                className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-90 flex items-center gap-2 group shadow-sm"
+                className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-95 flex items-center gap-2 group shadow-sm"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
-                <span className="hidden sm:inline font-bold text-sm">Back</span>
+                <span className="font-bold text-sm">Back</span>
               </button>
           ) : (
             <div className="flex items-center gap-2">
@@ -184,7 +187,8 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {currentView === 'setup' && history.length > 0 && (
+          {/* Persistent History Access */}
+          {currentView === 'setup' && (
              <button 
               onClick={() => setCurrentView('history')}
               className="px-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2 shadow-sm"
@@ -223,7 +227,7 @@ const App: React.FC = () => {
             history={history} 
             onEdit={editHistoryItem} 
             onDelete={deleteFromHistory} 
-            onBack={() => setCurrentView('setup')} 
+            onBack={handleBack} 
           />
         ) : currentView === 'grid' && session ? (
           <AttendanceGrid 
