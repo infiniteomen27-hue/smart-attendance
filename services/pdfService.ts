@@ -5,7 +5,6 @@ import { AttendanceSession } from '../types';
 
 /**
  * Generates and downloads a professional attendance report PDF.
- * Uses the explicit autoTable(doc, options) pattern which is more reliable in ESM environments.
  */
 export const generateAttendancePDF = (session: AttendanceSession) => {
   const doc = new jsPDF();
@@ -17,12 +16,18 @@ export const generateAttendancePDF = (session: AttendanceSession) => {
   doc.text('Attendance Report', pageWidth / 2, 20, { align: 'center' });
 
   // Details Section
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setTextColor(71, 85, 105); // slate-600
-  doc.text(`Class/Year: ${session.year}`, 20, 35);
-  doc.text(`Subject/Lecture: ${session.lecture}`, 20, 42);
-  doc.text(`Date: ${session.date}`, 140, 35);
-  doc.text(`Time: ${session.time}`, 140, 42);
+  
+  const leftCol = 20;
+  const rightCol = 130;
+  
+  doc.text(`Faculty: ${session.facultyName}`, leftCol, 35);
+  doc.text(`Class/Year: ${session.year}`, leftCol, 42);
+  doc.text(`Subject: ${session.lecture}`, leftCol, 49);
+  
+  doc.text(`Date: ${session.date}`, rightCol, 35);
+  doc.text(`Time: ${session.time}`, rightCol, 42);
 
   const presentCount = session.presentRolls.size;
   const absentCount = session.totalStudents - presentCount;
@@ -31,11 +36,11 @@ export const generateAttendancePDF = (session: AttendanceSession) => {
   // Statistics Header
   doc.setFontSize(14);
   doc.setTextColor(30, 41, 59);
-  doc.text('Summary', 20, 55);
+  doc.text('Summary', 20, 60);
   
-  // Generate Table using the functional approach
+  // Generate Table
   autoTable(doc, {
-    startY: 60,
+    startY: 65,
     head: [['Total Students', 'Present', 'Absent', 'Percentage']],
     body: [[session.totalStudents, presentCount, absentCount, `${attendancePercentage}%`]],
     theme: 'striped',
@@ -49,22 +54,21 @@ export const generateAttendancePDF = (session: AttendanceSession) => {
     .sort((a, b) => a - b)
     .join(', ');
 
-  // Get the Y position after the table
-  const finalY = (doc as any).lastAutoTable.finalY || 80;
-  const currentY = finalY + 15;
+  const finalY = (doc as any).lastAutoTable.finalY || 85;
+  let currentY = finalY + 15;
 
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.text('Present Roll Numbers', 20, currentY);
   doc.setFontSize(10);
   const presentSplitText = doc.splitTextToSize(presentList || 'None', pageWidth - 40);
   doc.text(presentSplitText, 20, currentY + 7);
 
-  const absentY = currentY + 15 + (presentSplitText.length * 5);
-  doc.setFontSize(14);
-  doc.text('Absent Roll Numbers', 20, absentY);
+  currentY = currentY + 15 + (presentSplitText.length * 5);
+  doc.setFontSize(13);
+  doc.text('Absent Roll Numbers', 20, currentY);
   doc.setFontSize(10);
   const absentSplitText = doc.splitTextToSize(absentList || 'None', pageWidth - 40);
-  doc.text(absentSplitText, 20, absentY + 7);
+  doc.text(absentSplitText, 20, currentY + 7);
 
   // Footer
   const footerY = doc.internal.pageSize.getHeight() - 15;

@@ -2,6 +2,7 @@
 export interface AttendanceSession {
   year: string;
   lecture: string;
+  facultyName: string;
   totalStudents: number;
   date: string;
   time: string;
@@ -11,5 +12,6 @@ export interface AttendanceSession {
 export interface SetupFormData {
   year: string;
   lecture: string;
+  facultyName: string;
   totalStudents: string;
 }
