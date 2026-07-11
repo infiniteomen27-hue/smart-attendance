@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AttendanceSession } from '../types';
 import { generateAttendancePDF } from '../services/pdfService';
 
@@ -13,6 +13,43 @@ interface AttendanceGridProps {
 const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, onReset, onSave }) => {
   const students = Array.from({ length: session.totalStudents }, (_, i) => i + 1);
   const presentCount = session.presentRolls.size;
+
+  const [copyFormat, setCopyFormat] = useState<'comma' | 'space' | 'newline'>('comma');
+  const [copied, setCopied] = useState(false);
+  const [copiedAbsent, setCopiedAbsent] = useState(false);
+
+  const sortedPresentRolls = Array.from(session.presentRolls as Set<number>).sort((a, b) => a - b);
+  const sortedAbsentRolls = students.filter(roll => !session.presentRolls.has(roll));
+
+  const getFormattedPresent = () => {
+    if (copyFormat === 'comma') return sortedPresentRolls.join(', ');
+    if (copyFormat === 'space') return sortedPresentRolls.join(' ');
+    return sortedPresentRolls.join('\n');
+  };
+
+  const getFormattedAbsent = () => {
+    if (copyFormat === 'comma') return sortedAbsentRolls.join(', ');
+    if (copyFormat === 'space') return sortedAbsentRolls.join(' ');
+    return sortedAbsentRolls.join('\n');
+  };
+
+  const handleCopyPresent = () => {
+    const text = getFormattedPresent();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleCopyAbsent = () => {
+    const text = getFormattedAbsent();
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedAbsent(true);
+      setTimeout(() => setCopiedAbsent(false), 2000);
+    });
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 w-full">
@@ -99,6 +136,139 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* Quick Copy & Paste Summary Section */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl shadow-slate-200/50 dark:shadow-none p-6 md:p-8 border border-white dark:border-slate-800 transition-colors duration-300 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5">
+                <rect width="8" height="4" x="8" y="2" rx="1" ry="1"/>
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+              </svg>
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">Quick Copy Summary</h3>
+            </div>
+            <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Easily copy present/absent roll numbers for portals or spreadsheets.</p>
+          </div>
+          
+          {/* Format Selector */}
+          <div className="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 p-1 rounded-xl border border-slate-100 dark:border-slate-700">
+            <span className="text-[10px] font-black uppercase text-slate-400 dark:text-slate-500 px-2">Format:</span>
+            <button
+              onClick={() => setCopyFormat('comma')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${copyFormat === 'comma' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+            >
+              Comma
+            </button>
+            <button
+              onClick={() => setCopyFormat('space')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${copyFormat === 'space' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+            >
+              Space
+            </button>
+            <button
+              onClick={() => setCopyFormat('newline')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${copyFormat === 'newline' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-300'}`}
+            >
+              List
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Present Rolls Copy Card */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">Present ({sortedPresentRolls.length})</span>
+              </div>
+              {sortedPresentRolls.length > 0 && (
+                <button
+                  onClick={handleCopyPresent}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${copied ? 'bg-green-500 text-white' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
+                >
+                  {copied ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      Copy List
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            {sortedPresentRolls.length > 0 ? (
+              <div 
+                onClick={handleCopyPresent}
+                className="group relative cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 transition-all font-mono text-sm max-h-40 overflow-y-auto select-all text-slate-800 dark:text-slate-200"
+              >
+                <div className="whitespace-pre-wrap break-all leading-relaxed">
+                  {getFormattedPresent()}
+                </div>
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded">
+                  Click to Copy
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-6 text-center border border-dashed border-slate-200 dark:border-slate-800">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">No students marked present yet.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Absent Rolls Copy Card */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                <span className="text-sm font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider">Absent ({sortedAbsentRolls.length})</span>
+              </div>
+              {sortedAbsentRolls.length > 0 && (
+                <button
+                  onClick={handleCopyAbsent}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${copiedAbsent ? 'bg-green-500 text-white' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'}`}
+                >
+                  {copiedAbsent ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      Copy List
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+            
+            {sortedAbsentRolls.length > 0 ? (
+              <div 
+                onClick={handleCopyAbsent}
+                className="group relative cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 transition-all font-mono text-sm max-h-40 overflow-y-auto select-all text-slate-800 dark:text-slate-200"
+              >
+                <div className="whitespace-pre-wrap break-all leading-relaxed">
+                  {getFormattedAbsent()}
+                </div>
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded">
+                  Click to Copy
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-6 text-center border border-dashed border-slate-200 dark:border-slate-800">
+                <p className="text-xs text-slate-400 dark:text-slate-500 font-bold">No students marked absent.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

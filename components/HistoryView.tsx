@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AttendanceSession } from '../types';
 
 interface HistoryViewProps {
@@ -10,6 +10,21 @@ interface HistoryViewProps {
 }
 
 const HistoryView: React.FC<HistoryViewProps> = ({ history, onEdit, onDelete, onBack }) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = (id: string, rolls: Set<number> | number[]) => {
+    const sorted = Array.from(rolls as Set<number>).sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      alert('No students were marked present.');
+      return;
+    }
+    const formattedText = sorted.join(', ');
+    navigator.clipboard.writeText(formattedText).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
       <div className="flex items-center justify-between mb-8">
@@ -53,6 +68,22 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onEdit, onDelete, on
               </div>
 
               <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => handleCopy(record.id, record.presentRolls)}
+                  className={`flex-1 sm:flex-none font-bold py-2 px-5 rounded-xl transition-all text-sm active:scale-95 flex items-center justify-center gap-1.5 ${copiedId === record.id ? 'bg-green-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
+                >
+                  {copiedId === record.id ? (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      Copy List
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={() => onEdit(record)}
                   className="flex-1 sm:flex-none bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 font-bold py-2 px-5 rounded-xl transition-all text-sm active:scale-95"

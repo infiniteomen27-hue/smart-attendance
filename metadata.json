@@ -1,5 +1,6 @@
 {
   "name": "SmartAttend",
   "description": "A minimalist, professional attendance tracking application with instant PDF report generation.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "majorCapabilities": []
 }
