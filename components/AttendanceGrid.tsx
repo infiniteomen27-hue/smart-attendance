@@ -33,9 +33,35 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
     return sortedAbsentRolls.join('\n');
   };
 
+  const getFormattedPresentWithDetails = () => {
+    return [
+      `Class: ${session.year}`,
+      `Subject: ${session.lecture}`,
+      `Faculty: ${session.facultyName}`,
+      `Date: ${session.date}`,
+      `Timing: ${session.time}`,
+      `Present Count: ${sortedPresentRolls.length} / ${session.totalStudents}`,
+      `----------------------------------------`,
+      getFormattedPresent()
+    ].join('\n');
+  };
+
+  const getFormattedAbsentWithDetails = () => {
+    return [
+      `Class: ${session.year}`,
+      `Subject: ${session.lecture}`,
+      `Faculty: ${session.facultyName}`,
+      `Date: ${session.date}`,
+      `Timing: ${session.time}`,
+      `Absent Count: ${sortedAbsentRolls.length} / ${session.totalStudents}`,
+      `----------------------------------------`,
+      getFormattedAbsent()
+    ].join('\n');
+  };
+
   const handleCopyPresent = () => {
-    const text = getFormattedPresent();
-    if (!text) return;
+    const text = getFormattedPresentWithDetails();
+    if (!sortedPresentRolls.length) return;
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -43,8 +69,8 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
   };
 
   const handleCopyAbsent = () => {
-    const text = getFormattedAbsent();
-    if (!text) return;
+    const text = getFormattedAbsentWithDetails();
+    if (!sortedAbsentRolls.length) return;
     navigator.clipboard.writeText(text).then(() => {
       setCopiedAbsent(true);
       setTimeout(() => setCopiedAbsent(false), 2000);
@@ -211,7 +237,7 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
                 className="group relative cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 transition-all font-mono text-sm max-h-40 overflow-y-auto select-all text-slate-800 dark:text-slate-200"
               >
                 <div className="whitespace-pre-wrap break-all leading-relaxed">
-                  {getFormattedPresent()}
+                  {getFormattedPresentWithDetails()}
                 </div>
                 <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded">
                   Click to Copy
@@ -257,7 +283,7 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
                 className="group relative cursor-pointer bg-slate-50 dark:bg-slate-950 hover:bg-slate-100/50 dark:hover:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 transition-all font-mono text-sm max-h-40 overflow-y-auto select-all text-slate-800 dark:text-slate-200"
               >
                 <div className="whitespace-pre-wrap break-all leading-relaxed">
-                  {getFormattedAbsent()}
+                  {getFormattedAbsentWithDetails()}
                 </div>
                 <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900/80 text-white text-[10px] font-bold px-2 py-1 rounded">
                   Click to Copy

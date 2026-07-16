@@ -7,6 +7,8 @@ export interface AttendanceSession {
   totalStudents: number;
   date: string;
   time: string;
+  startTime?: string;
+  endTime?: string;
   presentRolls: Set<number> | number[]; // Support both for serialization
 }
 
@@ -15,6 +17,8 @@ export interface SetupFormData {
   lecture: string;
   facultyName: string;
   totalStudents: string;
+  startTime: string;
+  endTime: string;
 }
 
 export interface UserAccount {

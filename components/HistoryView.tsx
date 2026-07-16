@@ -12,15 +12,27 @@ interface HistoryViewProps {
 const HistoryView: React.FC<HistoryViewProps> = ({ history, onEdit, onDelete, onBack }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const handleCopy = (id: string, rolls: Set<number> | number[]) => {
-    const sorted = Array.from(rolls as Set<number>).sort((a, b) => a - b);
+  const handleCopy = (record: AttendanceSession) => {
+    const rollsArray = Array.from(record.presentRolls as Set<number>);
+    const sorted = rollsArray.sort((a, b) => a - b);
     if (sorted.length === 0) {
       alert('No students were marked present.');
       return;
     }
-    const formattedText = sorted.join(', ');
+    const formattedRolls = sorted.join(', ');
+    const formattedText = [
+      `Class: ${record.year}`,
+      `Subject: ${record.lecture}`,
+      `Faculty: ${record.facultyName}`,
+      `Date: ${record.date}`,
+      `Timing: ${record.time}`,
+      `Present Count: ${sorted.length} / ${record.totalStudents}`,
+      `----------------------------------------`,
+      formattedRolls
+    ].join('\n');
+
     navigator.clipboard.writeText(formattedText).then(() => {
-      setCopiedId(id);
+      setCopiedId(record.id);
       setTimeout(() => setCopiedId(null), 2000);
     });
   };
@@ -69,7 +81,7 @@ const HistoryView: React.FC<HistoryViewProps> = ({ history, onEdit, onDelete, on
 
               <div className="flex gap-2 w-full sm:w-auto">
                 <button
-                  onClick={() => handleCopy(record.id, record.presentRolls)}
+                  onClick={() => handleCopy(record)}
                   className={`flex-1 sm:flex-none font-bold py-2 px-5 rounded-xl transition-all text-sm active:scale-95 flex items-center justify-center gap-1.5 ${copiedId === record.id ? 'bg-green-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}
                 >
                   {copiedId === record.id ? (

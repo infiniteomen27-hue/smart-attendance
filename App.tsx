@@ -125,7 +125,9 @@ const App: React.FC = () => {
       facultyName: data.facultyName,
       totalStudents: parseInt(data.totalStudents, 10),
       date: now.toLocaleDateString('en-GB'),
-      time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      time: `${data.startTime} - ${data.endTime}`,
+      startTime: data.startTime,
+      endTime: data.endTime,
       presentRolls: new Set<number>(),
     };
     setSession(newSession);
