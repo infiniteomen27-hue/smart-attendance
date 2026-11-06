@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { AttendanceSession } from '../types';
 import { generateAttendancePDF } from '../services/pdfService';
+import { WhatsAppModal } from './WhatsAppModal';
 
 interface AttendanceGridProps {
   session: AttendanceSession;
@@ -17,6 +18,7 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
   const [copyFormat, setCopyFormat] = useState<'comma' | 'space' | 'newline'>('comma');
   const [copied, setCopied] = useState(false);
   const [copiedAbsent, setCopiedAbsent] = useState(false);
+  const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
 
   const sortedPresentRolls = Array.from(session.presentRolls as Set<number>).sort((a, b) => a - b);
   const sortedAbsentRolls = students.filter(roll => !session.presentRolls.has(roll));
@@ -108,6 +110,16 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
           </div>
           
           <div className="flex flex-wrap gap-2 w-full justify-end">
+            <button
+              onClick={() => setIsWhatsAppOpen(true)}
+              className="flex-1 md:flex-none bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 text-sm"
+              title="Send Report directly to WhatsApp"
+            >
+              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.664-.698c.969.584 1.761.884 2.802.884 3.179 0 5.767-2.587 5.768-5.766.001-3.18-2.587-5.771-5.774-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.158.57 4.186 1.564 5.941l-1.564 5.714 5.86-1.537c1.705.93 3.655 1.455 5.727 1.455 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12z" />
+              </svg>
+              <span>WhatsApp</span>
+            </button>
             <button
               onClick={onSave}
               className="flex-1 md:flex-none bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-green-100 dark:shadow-none transition-all active:scale-95 flex items-center justify-center gap-2 text-sm"
@@ -297,6 +309,13 @@ const AttendanceGrid: React.FC<AttendanceGridProps> = ({ session, onToggleRoll, 
           </div>
         </div>
       </div>
+
+      {/* Direct WhatsApp Share Modal */}
+      <WhatsAppModal
+        session={session}
+        isOpen={isWhatsAppOpen}
+        onClose={() => setIsWhatsAppOpen(false)}
+      />
     </div>
   );
 };
